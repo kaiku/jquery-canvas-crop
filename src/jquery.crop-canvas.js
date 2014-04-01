@@ -1,6 +1,8 @@
 /**
  * CropCanvas is a jQuery plugin that uses <canvas> to allow basic image cropping.
  *
+ * Thanks to Simon Sarris for inspiration/code: http://simonsarris.com/blog/510-making-html5-canvas-useful
+ *
  * @name crop-canvas
  * @requires jQuery v1.2.3+
  * @author Greg Kuwaye
