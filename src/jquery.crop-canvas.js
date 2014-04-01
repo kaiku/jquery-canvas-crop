@@ -344,10 +344,10 @@
   };
 
   /**
-   * @param {integer} x
-   * @param {integer} y
-   * @param {integer} w
-   * @param {integer} h
+   * @param {number} x
+   * @param {number} y
+   * @param {number} w
+   * @param {number} h
    * @param {string} fill
    * @constructor
    */
@@ -376,10 +376,10 @@
   };
 
   /**
-   * @param {integer} x
-   * @param {integer} y
-   * @param {integer} w
-   * @param {integer} h
+   * @param {number} x
+   * @param {number} y
+   * @param {number} w
+   * @param {number} h
    * @param {string} fill
    * @constructor
    */
@@ -402,10 +402,10 @@
   /**
    * http://stackoverflow.com/a/2173084/2651279
    *
-   * @param {integer} x
-   * @param {integer} y
-   * @param {integer} w
-   * @param {integer} h
+   * @param {number} x
+   * @param {number} y
+   * @param {number} w
+   * @param {number} h
    * @param {string} fill
    * @constructor
    */
@@ -427,8 +427,8 @@
   /**
    * http://math.stackexchange.com/a/76463
    *
-   * @param {integer} mx
-   * @param {integer} my
+   * @param {number} mx
+   * @param {number} my
    * @returns {boolean}
    */
   Ellipse.prototype.contains = function (mx, my) {
