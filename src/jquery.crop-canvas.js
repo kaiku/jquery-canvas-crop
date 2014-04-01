@@ -248,6 +248,11 @@
     this.marquee = marquee;
   };
 
+  /**
+   * Gets the scaled cropped coordinates of the image from the marquee.
+   *
+   * @returns {{x: number, y: number, w: number, h: number}}
+   */
   CropCanvas.prototype.getCropCoordinates = function() {
     var factor = this.getScalingFactor();
 

@@ -16,5 +16,17 @@ $(function() {
     constrain: true,
     src: 'path/to/my/image.png'
   });
+
+  canvas.on('crop.finish', function(e, coords) {
+    console.log('mouse released', coords);
+  });
+
+  canvas.on('crop.resize', function(e, coords) {
+    console.log('drawing marquee', coords);
+  });
+
+  canvas.on('crop.reposition', function(e, coords) {
+    console.log('moving marquee', coords);
+  });
 });
 ```
