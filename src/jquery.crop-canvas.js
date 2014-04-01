@@ -25,7 +25,7 @@
    * @param {object} options
    * @constructor
    */
-  CropCanvas = function (canvas, options) {
+  CropCanvas = function(canvas, options) {
     var html = document.body.parentNode;
 
     this.canvas  = canvas;
@@ -84,7 +84,10 @@
     src: ''
   };
 
-  CropCanvas.prototype.init = function () {
+  /**
+   * Bootstraps the process.
+   */
+  CropCanvas.prototype.init = function() {
     var self = this;
 
     $(this)
@@ -99,7 +102,7 @@
 
     this.$window
         .on('mouseup', $.proxy(this.handleMouseup, this))
-        .on('keyup keydown', function (e) {
+        .on('keyup keydown', function(e) {
           self.state.shiftKey = e.shiftKey;
           return true;
         });
@@ -107,7 +110,7 @@
     this.drawBackground();
   };
 
-  CropCanvas.prototype.handleMousedown = function (e) {
+  CropCanvas.prototype.handleMousedown = function(e) {
     var mouse = this.getMouse(e),
         state = this.state;
 
@@ -123,7 +126,7 @@
     }
   };
 
-  CropCanvas.prototype.handleMouseup = function (e) {
+  CropCanvas.prototype.handleMouseup = function(e) {
     var cropCoords;
 
     // If we were just repositioning or resizing a box, report the final crop size.
@@ -136,7 +139,7 @@
     this.state.resizing = false;
   };
 
-  CropCanvas.prototype.handleMousemove = function (e) {
+  CropCanvas.prototype.handleMousemove = function(e) {
     var state = this.state,
         mouse = this.getMouse(e);
 
@@ -164,7 +167,7 @@
     }
   };
 
-  CropCanvas.prototype.repositionMarquee = function (e) {
+  CropCanvas.prototype.repositionMarquee = function(e) {
     var mouse = this.getMouse(e),
         state = this.state,
         dimensions = this.getScaledDimensions(),
@@ -184,7 +187,7 @@
     this.$canvas.trigger('crop.reposition', this.getCropCoordinates());
   };
 
-  CropCanvas.prototype.resizeMarquee = function (e) {
+  CropCanvas.prototype.resizeMarquee = function(e) {
     var mouse = this.getMouse(e),
         state = this.state,
         dimensions = this.getScaledDimensions(),
@@ -225,7 +228,7 @@
     this.$canvas.trigger('crop.resize', this.getCropCoordinates());
   };
 
-  CropCanvas.prototype.drawMarquee = function (x, y, w, h) {
+  CropCanvas.prototype.drawMarquee = function(x, y, w, h) {
     var marquee;
 
     switch (this.options.marqueeType) {
@@ -245,7 +248,7 @@
     this.marquee = marquee;
   };
 
-  CropCanvas.prototype.getCropCoordinates = function () {
+  CropCanvas.prototype.getCropCoordinates = function() {
     var factor = this.getScalingFactor();
 
     if (!this.marquee) return null;
@@ -258,6 +261,9 @@
     };
   };
 
+  /**
+   * Loads the image and draws it.
+   */
   CropCanvas.prototype.drawBackground = function() {
     if (this.options.src && !this.image) {
       this.image = document.createElement('img');
@@ -276,11 +282,19 @@
     this.context.drawImage(this.image, dimensions.x, dimensions.y, dimensions.w, dimensions.h);
   }
 
+  /**
+   * Clears and redraws the base background.
+   */
   CropCanvas.prototype.clearCanvas = function() {
     this.context.clearRect(0, 0, this.getCanvasWidth(), this.getCanvasHeight());
     this.drawBackground();
   };
 
+  /**
+   * Returns the coordinates used to fit an image into the canvas. Centers and scales down if necessary.
+   *
+   * @returns {{x: number, y: number, x2: number, y2: number, w: number, h: number}}
+   */
   CropCanvas.prototype.getScaledDimensions = function() {
     var factor = this.getScalingFactor(),
         w = this.image.width * factor,
@@ -298,25 +312,30 @@
     }
   };
 
-  CropCanvas.prototype.getScalingFactor = function () {
+  /**
+   * Returns the image scaling factor that is not greater than 1x.
+   * @returns {number}
+   */
+  CropCanvas.prototype.getScalingFactor = function() {
     var xScale = this.getCanvasWidth() / this.image.width,
         yScale = this.getCanvasHeight() / this.image.height;
 
-    // Return the appropriate scaling factor that is not greater than 1x.
     return Math.min(Math.min(xScale, yScale), 1);
   };
 
-  CropCanvas.prototype.getCanvasWidth = function () {
+  CropCanvas.prototype.getCanvasWidth = function() {
     return this.canvas.width;
   };
 
-  CropCanvas.prototype.getCanvasHeight = function () {
+  CropCanvas.prototype.getCanvasHeight = function() {
     return this.canvas.height;
   };
 
-  // Creates an object with x and y defined, set to the mouse position relative to the state's canvas
-  // If you wanna be super-correct this can be tricky, we have to worry about padding and borders
-  CropCanvas.prototype.getMouse = function (e) {
+  /**
+   * Creates an object with x and y defined, set to the mouse position relative to the state's canvas
+   * If you wanna be super-correct this can be tricky, we have to worry about padding and borders/
+   */
+  CropCanvas.prototype.getMouse = function(e) {
     var canvas = this.canvas,
         offsetX = 0,
         offsetY = 0,
@@ -353,7 +372,7 @@
    * @param {string} fill
    * @constructor
    */
-  Shape = function (x, y, w, h, fill) {
+  Shape = function(x, y, w, h, fill) {
     this.x = x;
     this.y = y;
     this.w = w;
@@ -362,18 +381,22 @@
     this.normalize();
   };
 
-  Shape.prototype.normalize = function () {
+  /**
+   * If the shape is drawn from a lower to upper quadrant, width and/or height will be negative.
+   * Normalizing to positive numbers makes working with coordinates easier.
+   */
+  Shape.prototype.normalize = function() {
     this.x = this.w < 0 ? this.x + this.w : this.x;
     this.y = this.h < 0 ? this.y + this.h : this.y;
     this.w = Math.abs(this.w);
     this.h = Math.abs(this.h);
   };
 
-  Shape.prototype.draw = function () {
+  Shape.prototype.draw = function() {
     throw 'Method "draw" must be implemented on objects inheriting from Shape.';
   };
 
-  Shape.prototype.contains = function () {
+  Shape.prototype.contains = function() {
     throw 'Method "contains" must be implemented on objects inheriting from Shape.';
   };
 
@@ -385,7 +408,7 @@
    * @param {string} fill
    * @constructor
    */
-  Rectangle = function (x, y, w, h, fill) {
+  Rectangle = function(x, y, w, h, fill) {
     Shape.call(this, x, y, w, h, fill);
   };
 
@@ -396,14 +419,18 @@
     context.fillRect(this.x, this.y, this.w, this.h);
   };
 
-// Determine if a point is inside the shape's bounds
+  /**
+   * Determine if a point is inside the shape's bounds.
+   *  
+   * @param mx
+   * @param my
+   * @returns {boolean}
+   */
   Rectangle.prototype.contains = function(mx, my) {
     return (this.x <= mx) && (this.x + this.w >= mx) && (this.y <= my) && (this.y + this.h >= my);
   };
 
   /**
-   * http://stackoverflow.com/a/2173084/2651279
-   *
    * @param {number} x
    * @param {number} y
    * @param {number} w
@@ -411,7 +438,7 @@
    * @param {string} fill
    * @constructor
    */
-  Ellipse = function (x, y, w, h, fill) {
+  Ellipse = function(x, y, w, h, fill) {
     Shape.call(this, x, y, w, h, fill);
     this.kappa = .5522848;
     this.ox = (this.w / 2) * this.kappa; // control point offset horizontal
@@ -433,12 +460,17 @@
    * @param {number} my
    * @returns {boolean}
    */
-  Ellipse.prototype.contains = function (mx, my) {
+  Ellipse.prototype.contains = function(mx, my) {
     return (Math.pow(mx - this.xm, 2) / Math.pow(this.xr, 2)) +
         (Math.pow(my - this.ym, 2) / Math.pow(this.yr, 2)) <= 1;
   };
 
-  Ellipse.prototype.draw = function (ctx) {
+  /**
+   * Draws an ellipse using Bezier curves. See http://stackoverflow.com/a/2173084/2651279
+   *
+   * @param {CanvasRenderingContext2D} ctx
+   */
+  Ellipse.prototype.draw = function(ctx) {
     var x = this.x,
         y = this.y,
         ox = this.ox,
@@ -461,9 +493,12 @@
 
   /**
    * jQuery plugin definition
+   *
+   * @param {object} option
+   * @returns {*}
    */
-  $.fn.cropCanvas = function (option) {
-    return this.each(function () {
+  $.fn.cropCanvas = function(option) {
+    return this.each(function() {
       var $this   = $(this),
           data    = $this.data('crop-canvas'),
           options = $.extend({}, CropCanvas.DEFAULTS, $this.data(), typeof option == 'object' && option);
