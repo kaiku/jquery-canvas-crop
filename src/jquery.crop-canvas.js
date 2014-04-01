@@ -86,26 +86,6 @@
     this.drawBackground();
   };
 
-  CropCanvas.prototype.drawMarquee = function (x, y, w, h) {
-    var marquee;
-
-    switch (this.options.marqueeType) {
-      case 'rectangle':
-        marquee = new Rectangle(x, y, w, h);
-        break;
-
-      case 'ellipse':
-        marquee = new Ellipse(x, y, w, h);
-        break;
-
-      default:
-        return;
-    }
-
-    marquee.draw(this.context);
-    this.marquee = marquee;
-  };
-
   CropCanvas.prototype.handleMousedown = function (e) {
     var mouse = this.getMouse(e),
         state = this.state;
@@ -224,6 +204,26 @@
     this.$canvas.trigger('crop.resize', this.getCropCoordinates());
   };
 
+  CropCanvas.prototype.drawMarquee = function (x, y, w, h) {
+    var marquee;
+
+    switch (this.options.marqueeType) {
+      case 'rectangle':
+        marquee = new Rectangle(x, y, w, h);
+        break;
+
+      case 'ellipse':
+        marquee = new Ellipse(x, y, w, h);
+        break;
+
+      default:
+        return;
+    }
+
+    marquee.draw(this.context);
+    this.marquee = marquee;
+  };
+
   CropCanvas.prototype.getCropCoordinates = function () {
     var factor = this.getScalingFactor();
 
@@ -238,23 +238,22 @@
   };
 
   CropCanvas.prototype.drawBackground = function() {
-    var context = this.context,
-        self = this,
-        drawImage;
-
-    drawImage = function() {
-      var dimensions = self.getScaledDimensions.call(self);
-      context.drawImage(self.image, dimensions.x, dimensions.y, dimensions.w, dimensions.h);
-    };
-
     if (this.options.src && !this.image) {
       this.image = document.createElement('img');
       this.image.src = this.options.src;
-      $(this.image).on('load', drawImage);
+      $(this.image).on('load', this.drawImage.bind(this));
     } else {
-      drawImage();
+      this.drawImage();
     }
   };
+
+  /**
+   * Draws the image onto the canvas.
+   */
+  CropCanvas.prototype.drawImage = function() {
+    var dimensions = this.getScaledDimensions();
+    this.context.drawImage(this.image, dimensions.x, dimensions.y, dimensions.w, dimensions.h);
+  }
 
   CropCanvas.prototype.clearCanvas = function() {
     this.context.clearRect(0, 0, this.getCanvasWidth(), this.getCanvasHeight());
