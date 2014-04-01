@@ -80,7 +80,7 @@
    */
   CropCanvas.DEFAULTS = {
     marqueeType: 'rectangle', // rectangle, ellipse
-    constrain: false,
+    constrain: true,
     src: ''
   };
 
