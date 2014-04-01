@@ -1,4 +1,4 @@
-CropCanvas
+CanvasCrop
 ===========
 
 A `<canvas>`-based image cropping jQuery plugin.
@@ -11,7 +11,8 @@ Usage
 ```javascript
 $(function() {
   var canvas = $('#my-canvas');
-  canvas.cropCanvas({
+
+  canvas.canvasCrop({
     marqueeType: 'ellipse',
     constrain: true,
     src: 'path/to/my/image.png'

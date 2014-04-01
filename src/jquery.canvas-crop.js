@@ -1,9 +1,9 @@
 /**
- * CropCanvas is a jQuery plugin that uses <canvas> to allow basic image cropping.
+ * CanvasCrop is a jQuery plugin that uses <canvas> to allow basic image cropping.
  *
  * Thanks to Simon Sarris for inspiration/code: http://simonsarris.com/blog/510-making-html5-canvas-useful
  *
- * @name crop-canvas
+ * @name canvas-crop
  * @requires jQuery v1.2.3+
  * @author Greg Kuwaye
  * @license MIT License - http://www.opensource.org/licenses/mit-license.php
@@ -15,7 +15,7 @@
     factory(jQuery);
   }
 }(function($) {
-  var CropCanvas,
+  var CanvasCrop,
       Shape,
       Rectangle,
       Ellipse;
@@ -25,13 +25,13 @@
    * @param {object} options
    * @constructor
    */
-  CropCanvas = function(canvas, options) {
+  CanvasCrop = function(canvas, options) {
     var html = document.body.parentNode;
 
     this.canvas  = canvas;
     this.$canvas = $(canvas);
     this.$window = $(window);
-    this.options = $.extend({}, CropCanvas.DEFAULTS, options);
+    this.options = $.extend({}, CanvasCrop.DEFAULTS, options);
     this.context = canvas.getContext('2d');
     this.image = null;
     this.marquee = null;
@@ -78,7 +78,7 @@
    *
    * @type {{marqueeType: string, constrain: boolean, src: string}}
    */
-  CropCanvas.DEFAULTS = {
+  CanvasCrop.DEFAULTS = {
     marqueeType: 'rectangle', // rectangle, ellipse
     constrain: true,
     src: ''
@@ -87,7 +87,7 @@
   /**
    * Bootstraps the process.
    */
-  CropCanvas.prototype.init = function() {
+  CanvasCrop.prototype.init = function() {
     var self = this;
 
     $(this)
@@ -110,7 +110,7 @@
     this.drawBackground();
   };
 
-  CropCanvas.prototype.handleMousedown = function(e) {
+  CanvasCrop.prototype.handleMousedown = function(e) {
     var mouse = this.getMouse(e),
         state = this.state;
 
@@ -126,7 +126,7 @@
     }
   };
 
-  CropCanvas.prototype.handleMouseup = function(e) {
+  CanvasCrop.prototype.handleMouseup = function(e) {
     var cropCoords;
 
     // If we were just repositioning or resizing a box, report the final crop size.
@@ -139,7 +139,7 @@
     this.state.resizing = false;
   };
 
-  CropCanvas.prototype.handleMousemove = function(e) {
+  CanvasCrop.prototype.handleMousemove = function(e) {
     var state = this.state,
         mouse = this.getMouse(e);
 
@@ -167,7 +167,7 @@
     }
   };
 
-  CropCanvas.prototype.repositionMarquee = function(e) {
+  CanvasCrop.prototype.repositionMarquee = function(e) {
     var mouse = this.getMouse(e),
         state = this.state,
         dimensions = this.getScaledDimensions(),
@@ -187,7 +187,7 @@
     this.$canvas.trigger('crop.reposition', this.getCropCoordinates());
   };
 
-  CropCanvas.prototype.resizeMarquee = function(e) {
+  CanvasCrop.prototype.resizeMarquee = function(e) {
     var mouse = this.getMouse(e),
         state = this.state,
         dimensions = this.getScaledDimensions(),
@@ -228,7 +228,7 @@
     this.$canvas.trigger('crop.resize', this.getCropCoordinates());
   };
 
-  CropCanvas.prototype.drawMarquee = function(x, y, w, h) {
+  CanvasCrop.prototype.drawMarquee = function(x, y, w, h) {
     var marquee;
 
     switch (this.options.marqueeType) {
@@ -253,7 +253,7 @@
    *
    * @returns {{x: number, y: number, w: number, h: number}}
    */
-  CropCanvas.prototype.getCropCoordinates = function() {
+  CanvasCrop.prototype.getCropCoordinates = function() {
     var factor = this.getScalingFactor();
 
     if (!this.marquee) return null;
@@ -269,7 +269,7 @@
   /**
    * Loads the image and draws it.
    */
-  CropCanvas.prototype.drawBackground = function() {
+  CanvasCrop.prototype.drawBackground = function() {
     if (this.options.src && !this.image) {
       this.image = document.createElement('img');
       this.image.src = this.options.src;
@@ -282,7 +282,7 @@
   /**
    * Draws the image onto the canvas.
    */
-  CropCanvas.prototype.drawImage = function() {
+  CanvasCrop.prototype.drawImage = function() {
     var dimensions = this.getScaledDimensions();
     this.context.drawImage(this.image, dimensions.x, dimensions.y, dimensions.w, dimensions.h);
   }
@@ -290,7 +290,7 @@
   /**
    * Clears and redraws the base background.
    */
-  CropCanvas.prototype.clearCanvas = function() {
+  CanvasCrop.prototype.clearCanvas = function() {
     this.context.clearRect(0, 0, this.getCanvasWidth(), this.getCanvasHeight());
     this.drawBackground();
   };
@@ -300,7 +300,7 @@
    *
    * @returns {{x: number, y: number, x2: number, y2: number, w: number, h: number}}
    */
-  CropCanvas.prototype.getScaledDimensions = function() {
+  CanvasCrop.prototype.getScaledDimensions = function() {
     var factor = this.getScalingFactor(),
         w = this.image.width * factor,
         h = this.image.height * factor,
@@ -321,18 +321,18 @@
    * Returns the image scaling factor that is not greater than 1x.
    * @returns {number}
    */
-  CropCanvas.prototype.getScalingFactor = function() {
+  CanvasCrop.prototype.getScalingFactor = function() {
     var xScale = this.getCanvasWidth() / this.image.width,
         yScale = this.getCanvasHeight() / this.image.height;
 
     return Math.min(Math.min(xScale, yScale), 1);
   };
 
-  CropCanvas.prototype.getCanvasWidth = function() {
+  CanvasCrop.prototype.getCanvasWidth = function() {
     return this.canvas.width;
   };
 
-  CropCanvas.prototype.getCanvasHeight = function() {
+  CanvasCrop.prototype.getCanvasHeight = function() {
     return this.canvas.height;
   };
 
@@ -340,7 +340,7 @@
    * Creates an object with x and y defined, set to the mouse position relative to the state's canvas
    * If you wanna be super-correct this can be tricky, we have to worry about padding and borders/
    */
-  CropCanvas.prototype.getMouse = function(e) {
+  CanvasCrop.prototype.getMouse = function(e) {
     var canvas = this.canvas,
         offsetX = 0,
         offsetY = 0,
@@ -502,15 +502,15 @@
    * @param {object} option
    * @returns {*}
    */
-  $.fn.cropCanvas = function(option) {
+  $.fn.canvasCrop = function(option) {
     return this.each(function() {
       var $this   = $(this),
-          data    = $this.data('crop-canvas'),
-          options = $.extend({}, CropCanvas.DEFAULTS, $this.data(), typeof option == 'object' && option);
+          data    = $this.data('canvas-crop'),
+          options = $.extend({}, CanvasCrop.DEFAULTS, $this.data(), typeof option == 'object' && option);
 
-      if (!data) $this.data('crop-canvas', (data = new CropCanvas(this, options)));
+      if (!data) $this.data('canvas-crop', (data = new CanvasCrop(this, options)));
     })
   }
 
-  $.fn.cropCanvas.Constructor = CropCanvas;
+  $.fn.canvasCrop.Constructor = CanvasCrop;
 }));
