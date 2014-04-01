@@ -1,4 +1,4 @@
 crop-canvas
 ===========
 
-Image cropping jQuery plugin that uses &lt;canvas>.
+A `<canvas>`-based image cropping jQuery plugin.
