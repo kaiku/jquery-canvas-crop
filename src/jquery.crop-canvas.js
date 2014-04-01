@@ -1,4 +1,18 @@
-(function ($) {
+/**
+ * CropCanvas is a jQuery plugin that uses <canvas> to allow basic image cropping.
+ *
+ * @name crop-canvas
+ * @requires jQuery v1.2.3+
+ * @author Greg Kuwaye
+ * @license MIT License - http://www.opensource.org/licenses/mit-license.php
+ */
+(function(factory) {
+  if (typeof define === 'function' && define.amd) {
+    define(['jquery'], factory);
+  } else {
+    factory(jQuery);
+  }
+}(function($) {
   var CropCanvas,
       Shape,
       Rectangle,
@@ -55,33 +69,38 @@
     this.init();
   };
 
+  /**
+   * marqueeType: "rectangle" or "ellipse"
+   * constrain:   Constrain marquee ratio to 1:1 (square/circle)
+   * src:         The path to the image
+   *
+   * @type {{marqueeType: string, constrain: boolean, src: string}}
+   */
   CropCanvas.DEFAULTS = {
     marqueeType: 'rectangle', // rectangle, ellipse
     constrain: false,
-    src: null
+    src: ''
   };
-
-  CropCanvas.prototype.constructor = CropCanvas;
 
   CropCanvas.prototype.init = function () {
     var self = this;
 
     $(this)
-      .on('drawBackground', function(a, b, c) {
-        console.log(a, b, c);
-      });
+        .on('drawBackground', function(a, b, c) {
+          console.log(a, b, c);
+        });
 
     this.$canvas
-      .on('mousedown', $.proxy(this.handleMousedown, this))
-      .on('mousemove', $.proxy(this.handleMousemove, this))
-      .css('cursor', 'crosshair');
+        .on('mousedown', $.proxy(this.handleMousedown, this))
+        .on('mousemove', $.proxy(this.handleMousemove, this))
+        .css('cursor', 'crosshair');
 
     this.$window
-      .on('mouseup', $.proxy(this.handleMouseup, this))
-      .on('keyup keydown', function (e) {
-        self.state.shiftKey = e.shiftKey;
-        return true;
-      });
+        .on('mouseup', $.proxy(this.handleMouseup, this))
+        .on('keyup keydown', function (e) {
+          self.state.shiftKey = e.shiftKey;
+          return true;
+        });
 
     this.drawBackground();
   };
@@ -165,9 +184,9 @@
 
   CropCanvas.prototype.resizeMarquee = function (e) {
     var mouse = this.getMouse(e),
-      state = this.state,
-      dimensions = this.getScaledDimensions(),
-      x, y, w, h;
+        state = this.state,
+        dimensions = this.getScaledDimensions(),
+        x, y, w, h;
 
     // Save these values that are used to calculate offets during resizing and dragging.
     if (!state.resizingCoords.x || !state.resizingCoords.y) {
@@ -341,8 +360,6 @@
     this.normalize();
   };
 
-  Shape.prototype.constructor = Shape;
-
   Shape.prototype.normalize = function () {
     this.x = this.w < 0 ? this.x + this.w : this.x;
     this.y = this.h < 0 ? this.y + this.h : this.y;
@@ -416,7 +433,7 @@
    */
   Ellipse.prototype.contains = function (mx, my) {
     return (Math.pow(mx - this.xm, 2) / Math.pow(this.xr, 2)) +
-      (Math.pow(my - this.ym, 2) / Math.pow(this.yr, 2)) <= 1;
+        (Math.pow(my - this.ym, 2) / Math.pow(this.yr, 2)) <= 1;
   };
 
   Ellipse.prototype.draw = function (ctx) {
@@ -454,4 +471,4 @@
   }
 
   $.fn.cropCanvas.Constructor = CropCanvas;
-})(jQuery);
+}));
