@@ -1,10 +1,7 @@
 /**
  * CanvasCrop is a jQuery plugin that uses <canvas> to allow basic image cropping.
- *
  * Thanks to Simon Sarris for inspiration/code: http://simonsarris.com/blog/510-making-html5-canvas-useful
  *
- * @name canvas-crop
- * @requires jQuery v1.2.3+
  * @author Greg Kuwaye
  * @license MIT License - http://www.opensource.org/licenses/mit-license.php
  */
@@ -56,11 +53,12 @@
 
     // This complicates things a little but but fixes mouse co-ordinate problems
     // when there's a border or padding. See getMouse for more detail
+    // TODO: refactor
     if (document.defaultView && document.defaultView.getComputedStyle) {
-      this.stylePaddingLeft = parseInt(document.defaultView.getComputedStyle(canvas, null)['paddingLeft'], 10) || 0;
-      this.stylePaddingTop = parseInt(document.defaultView.getComputedStyle(canvas, null)['paddingTop'], 10) || 0;
-      this.styleBorderLeft = parseInt(document.defaultView.getComputedStyle(canvas, null)['borderLeftWidth'], 10) || 0;
-      this.styleBorderTop = parseInt(document.defaultView.getComputedStyle(canvas, null)['borderTopWidth'], 10) || 0;
+      this.stylePaddingLeft = parseInt(document.defaultView.getComputedStyle(canvas, null).paddingLeft, 10) || 0;
+      this.stylePaddingTop = parseInt(document.defaultView.getComputedStyle(canvas, null).paddingTop, 10) || 0;
+      this.styleBorderLeft = parseInt(document.defaultView.getComputedStyle(canvas, null).borderLeftWidth, 10) || 0;
+      this.styleBorderTop = parseInt(document.defaultView.getComputedStyle(canvas, null).borderTopWidth, 10) || 0;
     }
 
     // Some pages have fixed-position bars (like the stumbleupon bar) at the top or left of the page
@@ -285,7 +283,7 @@
   CanvasCrop.prototype.drawImage = function() {
     var dimensions = this.getScaledDimensions();
     this.context.drawImage(this.image, dimensions.x, dimensions.y, dimensions.w, dimensions.h);
-  }
+  };
 
   /**
    * Clears and redraws the base background.
@@ -314,7 +312,7 @@
       y2: y + h,
       w: w,
       h: h
-    }
+    };
   };
 
   /**
@@ -445,7 +443,7 @@
    */
   Ellipse = function(x, y, w, h, fill) {
     Shape.call(this, x, y, w, h, fill);
-    this.kappa = .5522848;
+    this.kappa = 0.5522848;
     this.ox = (this.w / 2) * this.kappa; // control point offset horizontal
     this.oy = (this.h / 2) * this.kappa; // control point offset vertical
     this.xe = this.x + this.w; // x-end
@@ -509,8 +507,8 @@
           options = $.extend({}, CanvasCrop.DEFAULTS, $this.data(), typeof option == 'object' && option);
 
       if (!data) $this.data('canvas-crop', (data = new CanvasCrop(this, options)));
-    })
-  }
+    });
+  };
 
   $.fn.canvasCrop.Constructor = CanvasCrop;
 }));
