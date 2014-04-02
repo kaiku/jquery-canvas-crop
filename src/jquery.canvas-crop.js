@@ -252,13 +252,18 @@
    * @returns {{x: number, y: number, w: number, h: number}}
    */
   CanvasCrop.prototype.getCropCoordinates = function() {
-    var factor = this.getScalingFactor();
+    var factor = this.getScalingFactor(),
+        dimensions;
 
     if (!this.marquee) return null;
 
+    // The image will be centered in the canvas, so take the x and y offset into account.
+    dimensions = this.getScaledDimensions();
+
+    // The x/y offset will be >= 0.
     return {
-      x: this.marquee.x / factor,
-      y: this.marquee.y / factor,
+      x: (this.marquee.x - dimensions.x) / factor,
+      y: (this.marquee.y - dimensions.y) / factor,
       w: this.marquee.w / factor,
       h: this.marquee.h / factor
     };
