@@ -1,0 +1,6 @@
+{
+  "name": "jquery.canvas-crop",
+  "devDependencies": {
+    "jquery": "1.11.0"
+  }
+}
