@@ -8,6 +8,10 @@ module.exports = function(grunt) {
       dist: {
         src: ['src/**/*.js'],
         dest: 'dist/<%= pkg.name %>.js'
+      },
+      examples: {
+        src: ['bower_components/jquery/dist/jquery.js', 'src/**/*.js'],
+        dest: 'examples/combined.js'
       }
     },
     uglify: {
@@ -23,7 +27,6 @@ module.exports = function(grunt) {
     jshint: {
       files: ['Gruntfile.js', 'src/**/*.js'],
       options: {
-        // options here to override JSHint defaults
         globals: {
           jQuery: true,
           console: true,
@@ -34,7 +37,7 @@ module.exports = function(grunt) {
     },
     watch: {
       files: ['<%= jshint.files %>'],
-      tasks: ['jshint', 'qunit']
+      tasks: ['jshint', 'concat:examples']
     }
   });
 
