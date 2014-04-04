@@ -10360,7 +10360,7 @@ return jQuery;
    * @constructor
    */
   CanvasCrop = function(canvas, options) {
-    var html = document.body.parentNode;
+    var computedStyle = window.getComputedStyle(canvas, null);
 
     this.canvas  = canvas;
     this.$canvas = $(canvas);
@@ -10371,6 +10371,12 @@ return jQuery;
     this.marquee = null;
 
     this.state = {
+      canvas: {
+        paddingLeft: parseInt(computedStyle.getPropertyValue('padding-left')),
+        paddingTop: parseInt(computedStyle.getPropertyValue('padding-top')),
+        borderTop: parseInt(computedStyle.getPropertyValue('border-top-width')),
+        borderLeft: parseInt(computedStyle.getPropertyValue('border-left-width'))
+      },
       repositioning: false,
       repositioningCoords: {
         x: null,
@@ -10387,21 +10393,6 @@ return jQuery;
       },
       shiftKey: false
     };
-
-    // This complicates things a little but but fixes mouse co-ordinate problems
-    // when there's a border or padding. See getMouse for more detail
-    // TODO: refactor
-    if (document.defaultView && document.defaultView.getComputedStyle) {
-      this.stylePaddingLeft = parseInt(document.defaultView.getComputedStyle(canvas, null).paddingLeft, 10) || 0;
-      this.stylePaddingTop = parseInt(document.defaultView.getComputedStyle(canvas, null).paddingTop, 10) || 0;
-      this.styleBorderLeft = parseInt(document.defaultView.getComputedStyle(canvas, null).borderLeftWidth, 10) || 0;
-      this.styleBorderTop = parseInt(document.defaultView.getComputedStyle(canvas, null).borderTopWidth, 10) || 0;
-    }
-
-    // Some pages have fixed-position bars (like the stumbleupon bar) at the top or left of the page
-    // They will mess up mouse coordinates and this fixes that
-    this.htmlTop = html.offsetTop;
-    this.htmlLeft = html.offsetLeft;
 
     this.init();
   };
@@ -10424,11 +10415,6 @@ return jQuery;
    */
   CanvasCrop.prototype.init = function() {
     var self = this;
-
-    $(this)
-        .on('drawBackground', function(a, b, c) {
-          console.log(a, b, c);
-        });
 
     this.$canvas
         .on('mousedown', $.proxy(this.handleMousedown, this))
@@ -10677,35 +10663,14 @@ return jQuery;
   };
 
   /**
-   * Creates an object with x and y defined, set to the mouse position relative to the state's canvas
-   * If you wanna be super-correct this can be tricky, we have to worry about padding and borders/
+   * Gets the mouse coordinates relative to the canvas, taking into account padding and border width.
    */
   CanvasCrop.prototype.getMouse = function(e) {
-    var canvas = this.canvas,
-        offsetX = 0,
-        offsetY = 0,
-        mx, my;
+    var tgt = e.target;
 
-    // Compute the total offset
-    if (canvas.offsetParent !== undefined) {
-      do {
-        offsetX += canvas.offsetLeft;
-        offsetY += canvas.offsetTop;
-      } while ((canvas = canvas.offsetParent));
-    }
-
-    // Add padding and border style widths to offset
-    // Also add the <html> offsets in case there's a position:fixed bar
-    offsetX += this.stylePaddingLeft + this.styleBorderLeft + this.htmlLeft;
-    offsetY += this.stylePaddingTop + this.styleBorderTop + this.htmlTop;
-
-    mx = e.pageX - offsetX;
-    my = e.pageY - offsetY;
-
-    // We return a simple javascript object (a hash) with x and y defined
     return {
-      x: mx,
-      y: my
+      x: e.pageX - tgt.offsetLeft - this.state.canvas.paddingLeft - this.state.canvas.borderLeft,
+      y: e.pageY - tgt.offsetTop - this.state.canvas.paddingTop - this.state.canvas.borderTop
     };
   };
 
