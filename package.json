@@ -1,7 +1,7 @@
 {
   "name": "jquery.canvas-crop",
   "description": "A canvas-based jQuery plugin for image cropping.",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "homepage": "https://github.com/kaiku/canvas-crop",
   "license": "MIT",
   "repository": {
