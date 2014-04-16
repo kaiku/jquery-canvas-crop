@@ -385,8 +385,6 @@
       packed.exception = e;
     }
 
-    console.log(packed);
-
     return packed;
   };
 
