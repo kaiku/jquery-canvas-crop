@@ -116,8 +116,7 @@
 
     // If we were just repositioning or resizing a box, report the final crop size.
     if (this.state.repositioning || this.state.resizing) {
-      cropCoords = this.getCropCoordinates();
-      this.$canvas.trigger($.Event('crop.finish', {coordinates: cropCoords}));
+      this.$canvas.trigger($.Event('crop.finish', {coordinates: this.getCropCoordinates(true)}));
 
       // Have we enabled raw data output?
       if (this.options.enableRawDataOutput) {
@@ -174,7 +173,7 @@
 
     this.drawMarquee(x, y, marquee.w, marquee.h);
 
-    this.$canvas.trigger($.Event('crop.reposition', {coordinates: this.getCropCoordinates()}));
+    this.$canvas.trigger($.Event('crop.reposition', {coordinates: this.getCropCoordinates(true)}));
   };
 
   CanvasCrop.prototype.resizeMarquee = function(e) {
@@ -215,7 +214,7 @@
     }
 
     this.drawMarquee(x, y, w, h);
-    this.$canvas.trigger($.Event('crop.resize', {coordinates: this.getCropCoordinates()}));
+    this.$canvas.trigger($.Event('crop.resize', {coordinates: this.getCropCoordinates(true)}));
   };
 
   CanvasCrop.prototype.drawMarquee = function(x, y, w, h) {
@@ -239,13 +238,14 @@
   };
 
   /**
-   * Gets the scaled cropped coordinates of the image from the marquee.
+   * Gets the scaled cropped coordinates of the image from the marquee. Optionally return Math.floor'ed values.
    *
    * @returns {{x: number, y: number, w: number, h: number}}
    */
-  CanvasCrop.prototype.getCropCoordinates = function() {
+  CanvasCrop.prototype.getCropCoordinates = function(floor) {
     var factor = this.getScalingFactor(),
-        dimensions;
+        dimensions,
+        packed;
 
     if (!this.marquee) return null;
 
@@ -253,12 +253,23 @@
     dimensions = this.getScaledDimensions();
 
     // The x/y offset will be >= 0.
-    return {
+    packed = {
       x: (this.marquee.x - dimensions.x) / factor,
       y: (this.marquee.y - dimensions.y) / factor,
       w: this.marquee.w / factor,
       h: this.marquee.h / factor
     };
+
+    // Normalize the values.
+    if (floor) {
+      for (var i in packed) {
+        if (packed.hasOwnProperty(i)) {
+          packed[i] = Math.floor(packed[i]);
+        }
+      }
+    }
+
+    return packed;
   };
 
   /**
@@ -353,15 +364,15 @@
   CanvasCrop.prototype.getRawCroppedImageData = function() {
     var workCanvas = document.createElement('canvas'),
         workContext = workCanvas.getContext('2d'),
-        coords = this.getCropCoordinates(),
+        coords = this.getCropCoordinates(true),
         packed;
 
     // The data array to return
     packed = {
-      x: Math.floor(coords.x),
-      y: Math.floor(coords.y),
-      w: Math.floor(coords.w),
-      h: Math.floor(coords.h),
+      x: coords.x,
+      y: coords.y,
+      w: coords.w,
+      h: coords.h,
       image: {
         w: this.image.width,
         h: this.image.height
