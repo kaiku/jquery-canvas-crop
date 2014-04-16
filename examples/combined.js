@@ -10407,7 +10407,8 @@ return jQuery;
   CanvasCrop.DEFAULTS = {
     marqueeType: 'rectangle', // rectangle, ellipse
     constrain: true,
-    src: ''
+    src: '',
+    enableRawDataOutput: false
   };
 
   /**
@@ -10454,6 +10455,11 @@ return jQuery;
     if (this.state.repositioning || this.state.resizing) {
       cropCoords = this.getCropCoordinates();
       this.$canvas.trigger('crop.finish', cropCoords);
+
+      // Have we enabled raw data output?
+      if (this.options.enableRawDataOutput) {
+        this.$canvas.trigger('crop.data', this.getRawCroppedImageData());
+      }
     }
 
     this.state.repositioning = false;
@@ -10671,6 +10677,35 @@ return jQuery;
     return {
       x: e.pageX - tgt.offsetLeft - this.state.canvas.paddingLeft - this.state.canvas.borderLeft,
       y: e.pageY - tgt.offsetTop - this.state.canvas.paddingTop - this.state.canvas.borderTop
+    };
+  };
+
+  /**
+   * When called, writes the selected portion of the image to a hidden canvas and exports its data.
+   * This is a very slow function and should only be called on mouseup, and only if the user enabled the feature.
+   */
+  CanvasCrop.prototype.getRawCroppedImageData = function() {
+    var workCanvas = document.createElement('canvas'),
+        workContext = workCanvas.getContext('2d'),
+        coords = this.getCropCoordinates(),
+        data;
+
+    // Set the canvas dimensions in order to crop properly.
+    workCanvas.width = coords.w;
+    workCanvas.height = coords.h;
+
+    // Draw the selected image into the canvas.
+    workContext.drawImage(this.image, coords.x, coords.y, coords.w, coords.h, 0, 0, coords.w, coords.h);
+
+    // Capture the data.
+    data = workCanvas.toDataURL('image/png');
+
+    return {
+      data: data,
+      x: Math.floor(coords.x),
+      y: Math.floor(coords.y),
+      w: Math.floor(coords.w),
+      h: Math.floor(coords.h)
     };
   };
 

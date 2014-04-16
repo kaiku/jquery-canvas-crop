@@ -6,13 +6,16 @@
     <script src="combined.js"></script>
     <script type="text/javascript">
         $(function() {
-            var canvasCrop = $('#example-1').canvasCrop({
-                'marqueeType': 'ellipse',
-                'constrain': true,
-                'src': 'beethoven.jpg'
+            var exampleOne,
+                exampleTwo;
+
+            exampleOne = $('#example-1').canvasCrop({
+                marqueeType: 'ellipse',
+                constrain: true,
+                src: 'beethoven.jpg'
             });
 
-            canvasCrop
+            exampleOne
                 .on('crop.finish', function(e, coords) {
                     $('#example-1-finish').html(JSON.stringify(coords));
                 })
@@ -22,6 +25,26 @@
                 .on('crop.reposition', function(e, coords) {
                     $('#example-1-reposition').html(JSON.stringify(coords));
                 });
+
+            exampleTwo = $('#example-2').canvasCrop({
+                marqueeType: 'rectangle',
+                constrain: true,
+                src: 'beethoven.jpg',
+                enableRawDataOutput: true
+            });
+
+            exampleTwo.on('crop.data', function(e, data) {
+                var canvas = $('#example-2-thumbnail').get(0),
+                    context = canvas.getContext('2d'),
+                    img = document.createElement('img');
+
+                img.onload = function() {
+                    context.clearRect(0, 0, canvas.width, canvas.height);
+                    context.drawImage(img, 0, 0, data.w, data.h, 0, 0, canvas.width, canvas.height);
+                };
+
+                img.src = data.data;
+            });
         });
     </script>
     <style type="text/css">
@@ -31,11 +54,19 @@
     </style>
 </head>
 <body>
-    <canvas id="example-1" width="300" height="300" style="padding: 20px; background: #eee;"></canvas>
-    <div>
-        <p id="example-1-finish"></p>
-        <p id="example-1-resize"></p>
-        <p id="example-1-reposition"></p>
+    <div style="width: 380px; display: inline-block; vertical-align: top;">
+        <canvas id="example-1" width="300" height="300" style="padding: 20px; background: #eee;"></canvas>
+        <div>
+            <p id="example-1-finish"></p>
+            <p id="example-1-resize"></p>
+            <p id="example-1-reposition"></p>
+        </div>
+    </div>
+    <div style="width: 380px; display: inline-block; vertical-align: top;">
+        <canvas id="example-2" width="300" height="300" style="padding: 20px; background: #eee;"></canvas>
+        <div>
+            <canvas width="100" height="100" id="example-2-thumbnail" style="border: 2px solid #ccc; border-radius: 50%;"></canvas>
+        </div>
     </div>
 </body>
 </html>
