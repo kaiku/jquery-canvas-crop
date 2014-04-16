@@ -8,10 +8,16 @@ module.exports = function(grunt) {
       dist: {
         src: ['src/**/*.js'],
         dest: 'dist/<%= pkg.name %>.js'
-      },
+      }
+    },
+    copy: {
       examples: {
-        src: ['bower_components/jquery/dist/jquery.js', 'src/**/*.js'],
-        dest: 'examples/combined.js'
+        files: [
+          {
+            src: 'src/jquery.canvas-crop.js',
+            dest: 'examples/assets/jquery.canvas-crop.js'
+          }
+        ]
       }
     },
     uglify: {
@@ -37,7 +43,7 @@ module.exports = function(grunt) {
     },
     watch: {
       files: ['<%= jshint.files %>'],
-      tasks: ['jshint', 'concat:examples']
+      tasks: ['jshint', 'copy:examples']
     }
   });
 
@@ -45,7 +51,8 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-contrib-jshint');
   grunt.loadNpmTasks('grunt-contrib-watch');
   grunt.loadNpmTasks('grunt-contrib-concat');
+  grunt.loadNpmTasks('grunt-contrib-copy');
 
   grunt.registerTask('test', ['jshint']);
-  grunt.registerTask('default', ['jshint', 'concat', 'uglify']);
+  grunt.registerTask('default', ['jshint', 'concat', 'copy', 'uglify']);
 };
