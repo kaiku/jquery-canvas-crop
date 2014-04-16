@@ -332,18 +332,17 @@
   };
 
   /**
-   * Gets the mouse coordinates relative to the canvas. This observes the canvas parent's offset and
-   * takes into account the canvas padding and border.
+   * Gets the mouse coordinates relative to the canvas. The event properties pageX and pageY give us the position
+   * of the mouse relative to the left and top edge of the document. We then subtract the canvas offset relative
+   * to the same corner as well as padding and border to get the "true" coordinates relative to the canvas.
    */
   CanvasCrop.prototype.getMouse = function(e) {
     var tgt = e.target,
-        offset = $(tgt).parent().offset();
-
-    //console.log(JSON.stringify($(tgt).parent().offset()));
+        offset = $(tgt).offset();
 
     return {
-      x: e.pageX - tgt.offsetLeft - offset.left - this.state.canvas.paddingLeft - this.state.canvas.borderLeft,
-      y: e.pageY - tgt.offsetTop - offset.top - this.state.canvas.paddingTop - this.state.canvas.borderTop
+      x: e.pageX - offset.left - this.state.canvas.paddingLeft - this.state.canvas.borderLeft,
+      y: e.pageY - offset.top - this.state.canvas.paddingTop - this.state.canvas.borderTop
     };
   };
 
