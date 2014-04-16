@@ -10669,14 +10669,18 @@ return jQuery;
   };
 
   /**
-   * Gets the mouse coordinates relative to the canvas, taking into account padding and border width.
+   * Gets the mouse coordinates relative to the canvas. This observes the canvas parent's offset and
+   * takes into account the canvas padding and border.
    */
   CanvasCrop.prototype.getMouse = function(e) {
-    var tgt = e.target;
+    var tgt = e.target,
+        offset = $(tgt).parent().offset();
+
+    //console.log(JSON.stringify($(tgt).parent().offset()));
 
     return {
-      x: e.pageX - tgt.offsetLeft - this.state.canvas.paddingLeft - this.state.canvas.borderLeft,
-      y: e.pageY - tgt.offsetTop - this.state.canvas.paddingTop - this.state.canvas.borderTop
+      x: e.pageX - tgt.offsetLeft - offset.left - this.state.canvas.paddingLeft - this.state.canvas.borderLeft,
+      y: e.pageY - tgt.offsetTop - offset.top - this.state.canvas.paddingTop - this.state.canvas.borderTop
     };
   };
 
@@ -10688,7 +10692,19 @@ return jQuery;
     var workCanvas = document.createElement('canvas'),
         workContext = workCanvas.getContext('2d'),
         coords = this.getCropCoordinates(),
-        data;
+        packed;
+
+    // The data array to return
+    packed = {
+      x: Math.floor(coords.x),
+      y: Math.floor(coords.y),
+      w: Math.floor(coords.w),
+      h: Math.floor(coords.h),
+      image: {
+        w: this.image.width,
+        h: this.image.height
+      }
+    };
 
     // Set the canvas dimensions in order to crop properly.
     workCanvas.width = coords.w;
@@ -10697,16 +10713,18 @@ return jQuery;
     // Draw the selected image into the canvas.
     workContext.drawImage(this.image, coords.x, coords.y, coords.w, coords.h, 0, 0, coords.w, coords.h);
 
-    // Capture the data.
-    data = workCanvas.toDataURL('image/png');
+    // If the image isn't being served off of the same domain, this will throw a security exception.
+    // Let's catch that exception and instead just set data to null.
+    try {
+      packed.data = workCanvas.toDataURL('image/png');
+    } catch(e) {
+      packed.data = null;
+      packed.exception = e;
+    }
 
-    return {
-      data: data,
-      x: Math.floor(coords.x),
-      y: Math.floor(coords.y),
-      w: Math.floor(coords.w),
-      h: Math.floor(coords.h)
-    };
+    console.log(packed);
+
+    return packed;
   };
 
   /**
@@ -10766,7 +10784,7 @@ return jQuery;
 
   /**
    * Determine if a point is inside the shape's bounds.
-   *  
+   *
    * @param mx
    * @param my
    * @returns {boolean}
