@@ -16,14 +16,16 @@
             });
 
             exampleOne
-                .on('crop.finish', function(e, coords) {
-                    $('#example-1-finish').html(JSON.stringify(coords));
+                .on('crop.finish', function(e) {
+                    $('#example-1-finish').html(JSON.stringify(e.coordinates));
                 })
-                .on('crop.resize', function(e, coords) {
-                    $('#example-1-resize').html(JSON.stringify(coords));
+                .on('crop.resize', function(e) {
+                    var coords = e.coordinates;
+                    $('#example-1-resize').html(JSON.stringify(e.coordinates));
                 })
-                .on('crop.reposition', function(e, coords) {
-                    $('#example-1-reposition').html(JSON.stringify(coords));
+                .on('crop.reposition', function(e) {
+                    var coords = e.coordinates;
+                    $('#example-1-reposition').html(JSON.stringify(e.coordinates));
                 });
 
             exampleTwo = $('#example-2').canvasCrop({
@@ -33,8 +35,9 @@
                 enableRawDataOutput: true
             });
 
-            exampleTwo.on('crop.data', function(e, data) {
-                var canvas = $('#example-2-thumbnail').get(0),
+            exampleTwo.on('crop.data', function(e) {
+                var data = e.rawData,
+                    canvas = $('#example-2-thumbnail').get(0),
                     context = canvas.getContext('2d'),
                     img = document.createElement('img');
 

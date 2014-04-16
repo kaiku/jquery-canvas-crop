@@ -10454,11 +10454,11 @@ return jQuery;
     // If we were just repositioning or resizing a box, report the final crop size.
     if (this.state.repositioning || this.state.resizing) {
       cropCoords = this.getCropCoordinates();
-      this.$canvas.trigger('crop.finish', cropCoords);
+      this.$canvas.trigger($.Event('crop.finish', {coordinates: cropCoords}));
 
       // Have we enabled raw data output?
       if (this.options.enableRawDataOutput) {
-        this.$canvas.trigger('crop.data', this.getRawCroppedImageData());
+        this.$canvas.trigger($.Event('crop.data', {rawData: this.getRawCroppedImageData()}));
       }
     }
 
@@ -10511,7 +10511,7 @@ return jQuery;
 
     this.drawMarquee(x, y, marquee.w, marquee.h);
 
-    this.$canvas.trigger('crop.reposition', this.getCropCoordinates());
+    this.$canvas.trigger($.Event('crop.reposition', {coordinates: this.getCropCoordinates()}));
   };
 
   CanvasCrop.prototype.resizeMarquee = function(e) {
@@ -10552,7 +10552,7 @@ return jQuery;
     }
 
     this.drawMarquee(x, y, w, h);
-    this.$canvas.trigger('crop.resize', this.getCropCoordinates());
+    this.$canvas.trigger($.Event('crop.resize', {coordinates: this.getCropCoordinates()}));
   };
 
   CanvasCrop.prototype.drawMarquee = function(x, y, w, h) {

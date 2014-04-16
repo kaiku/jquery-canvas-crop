@@ -15,19 +15,28 @@ $(function() {
   canvas.canvasCrop({
     marqueeType: 'ellipse',
     constrain: true,
-    src: 'path/to/my/image.png'
+    src: 'path/to/my/image.png',
+    enableRawDataOutput: true
   });
 
-  canvas.on('crop.finish', function(e, coords) {
-    console.log('mouse released', coords);
+  canvas.on('crop.finish', function(e) {
+    console.log('mouse released', e.coordinates);
   });
 
-  canvas.on('crop.resize', function(e, coords) {
-    console.log('drawing marquee', coords);
+  canvas.on('crop.resize', function(e) {
+    console.log('drawing marquee', e.coordinates);
   });
 
-  canvas.on('crop.reposition', function(e, coords) {
-    console.log('moving marquee', coords);
+  canvas.on('crop.reposition', function(e) {
+    console.log('moving marquee', e.coordinates);
+  });
+
+  canvas.on('crop.data', function(e) {
+    var img = $('<img>').attr('src', e.rawData.data);
+    img.on('load', function() {
+      $('body').append(img);
+    });
+    console.log(e.rawData.x, e.rawData.y, e.rawData.w, e.rawData.h);
   });
 });
 ```
