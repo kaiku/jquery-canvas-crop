@@ -15,7 +15,7 @@ if (typeof Object.create !== 'function') {
   };
 }
 
-(function(factory) {
+(function (factory) {
   if (typeof define === 'function' && define.amd) {
     define(['jquery'], factory);
   } else {
@@ -28,20 +28,19 @@ if (typeof Object.create !== 'function') {
       Ellipse;
 
   /**
-   * @param {HTMLElement} canvas
+   * @param {HTMLCanvasElement} canvas
    * @param {object} options
    * @constructor
    */
-  CanvasCrop = function(canvas, options) {
+  CanvasCrop = function (canvas, options) {
     var computedStyle = window.getComputedStyle(canvas, null);
 
-    this.canvas  = canvas;
     this.$canvas = $(canvas);
     this.$window = $(window);
     this.options = $.extend({}, CanvasCrop.DEFAULTS, options);
     this.context = canvas.getContext('2d');
     this.image = null;
-    this.marquee = null;
+    this.marquee = this.options.marqueeType === 'ellipse' ? new Ellipse() : new Rectangle();
 
     this.state = {
       canvas: {
@@ -87,7 +86,7 @@ if (typeof Object.create !== 'function') {
   /**
    * Bootstraps the process.
    */
-  CanvasCrop.prototype.init = function() {
+  CanvasCrop.prototype.init = function () {
     var self = this;
 
     this.$canvas
@@ -105,23 +104,30 @@ if (typeof Object.create !== 'function') {
     this.drawBackground();
   };
 
-  CanvasCrop.prototype.handleMousedown = function(e) {
+  /**
+   * @param {object} e
+   */
+  CanvasCrop.prototype.handleMousedown = function (e) {
     var mouse = this.getMouse(e),
-        state = this.state;
+        state = this.state,
+        marquee = this.marquee;
 
     // Mouse was pressed while inside a visible marquee.
-    if (this.marquee && this.marquee.contains(mouse.x, mouse.y)) {
+    if (marquee && marquee.contains(mouse.x, mouse.y)) {
       state.repositioning = true;
       state.resizing = false;
-      state.repositioningOffset.x = mouse.x - this.marquee.x;
-      state.repositioningOffset.y = mouse.y - this.marquee.y;
+      state.repositioningOffset.x = mouse.x - marquee.x;
+      state.repositioningOffset.y = mouse.y - marquee.y;
     } else {
       state.repositioning = false;
       state.resizing = true;
     }
   };
 
-  CanvasCrop.prototype.handleMouseup = function(e) {
+  /**
+   * @param {object} e
+   */
+  CanvasCrop.prototype.handleMouseup = function (e) {
     // If we were just repositioning or resizing a box, report the final crop size.
     if (this.state.repositioning || this.state.resizing) {
       this.$canvas.trigger($.Event('crop.finish', {coordinates: this.getCropCoordinates(true)}));
@@ -136,12 +142,16 @@ if (typeof Object.create !== 'function') {
     this.state.resizing = false;
   };
 
-  CanvasCrop.prototype.handleMousemove = function(e) {
+  /**
+   * @param {object} e
+   */
+  CanvasCrop.prototype.handleMousemove = function (e) {
     var state = this.state,
-        mouse = this.getMouse(e);
+        mouse = this.getMouse(e),
+        marquee = this.marquee;
 
-    if (this.marquee) {
-      if (this.marquee.contains(mouse.x, mouse.y)) {
+    if (marquee) {
+      if (marquee.contains(mouse.x, mouse.y)) {
         this.$canvas.css('cursor', 'move');
       } else {
         this.$canvas.css('cursor', 'crosshair');
@@ -158,13 +168,18 @@ if (typeof Object.create !== 'function') {
     this.clearCanvas();
 
     if (state.repositioning) {
-      return this.repositionMarquee(e);
+      this.repositionMarquee(e);
     } else if (state.resizing) {
-      return this.resizeMarquee(e);
+      this.resizeMarquee(e);
     }
   };
 
-  CanvasCrop.prototype.repositionMarquee = function(e) {
+  /**
+   * Fires each time a marquee is repositioned by dragging.
+   *
+   * @param {object} e
+   */
+  CanvasCrop.prototype.repositionMarquee = function (e) {
     var mouse = this.getMouse(e),
         state = this.state,
         dimensions = this.getScaledDimensions(),
@@ -179,12 +194,16 @@ if (typeof Object.create !== 'function') {
     x = Math.min(Math.max(x, dimensions.x), dimensions.x2 - marquee.w);
     y = Math.min(Math.max(y, dimensions.y), dimensions.y2 - marquee.h);
 
-    this.drawMarquee(x, y, marquee.w, marquee.h);
-
+    this.draw(x, y, marquee.w, marquee.h);
     this.$canvas.trigger($.Event('crop.reposition', {coordinates: this.getCropCoordinates(true)}));
   };
 
-  CanvasCrop.prototype.resizeMarquee = function(e) {
+  /**
+   * Fires each time a marquee is redrawn (resized).
+   *
+   * @param {object} e
+   */
+  CanvasCrop.prototype.resizeMarquee = function (e) {
     var mouse = this.getMouse(e),
         state = this.state,
         dimensions = this.getScaledDimensions(),
@@ -221,28 +240,41 @@ if (typeof Object.create !== 'function') {
       w = w < 0 ? -min : min;
     }
 
-    this.drawMarquee(x, y, w, h);
+    this.draw(x, y, w, h);
     this.$canvas.trigger($.Event('crop.resize', {coordinates: this.getCropCoordinates(true)}));
   };
 
-  CanvasCrop.prototype.drawMarquee = function(x, y, w, h) {
-    var marquee;
+  /**
+   * Draws the canvas from the bottom up, starting with the base background image; next, the semi-transparent overlay;
+   * and finally, the clipping mask image representing the selceted area.
+   *
+   * @param {number} x
+   * @param {number} y
+   * @param {number} w
+   * @param {number} h
+   */
+  CanvasCrop.prototype.draw = function (x, y, w, h) {
+    var context = this.context,
+        dimensions = this.getScaledDimensions();
 
-    switch (this.options.marqueeType) {
-      case 'rectangle':
-        marquee = new Rectangle(x, y, w, h);
-        break;
+    this.clearCanvas();
+    this.drawBackground();
 
-      case 'ellipse':
-        marquee = new Ellipse(x, y, w, h);
-        break;
+    // The semi-transparent overlay.
+    context.fillStyle = 'rgba(0, 0, 0, .5)';
+    context.fillRect(dimensions.x, dimensions.y, dimensions.w, dimensions.h);
+    context.save();
 
-      default:
-        return;
-    }
+    // Tell the marquee to draw itself on the context.
+    this.marquee.update(x, y, w, h);
+    this.marquee.draw(context);
 
-    marquee.draw(this.context);
-    this.marquee = marquee;
+    // Clip the just-drawn marquee and draw the background on top of it.
+    context.clip();
+    this.drawBackground();
+
+    // Restore the context, giving the impression of a "windowed" selection.
+    context.restore();
   };
 
   /**
@@ -252,20 +284,21 @@ if (typeof Object.create !== 'function') {
    */
   CanvasCrop.prototype.getCropCoordinates = function(floor) {
     var factor = this.getScalingFactor(),
+        marquee = this.marquee,
         dimensions,
         packed;
 
-    if (!this.marquee) return null;
+    if (!marquee) return null;
 
     // The image will be centered in the canvas, so take the x and y offset into account.
     dimensions = this.getScaledDimensions();
 
     // The x/y offset will be >= 0.
     packed = {
-      x: (this.marquee.x - dimensions.x) / factor,
-      y: (this.marquee.y - dimensions.y) / factor,
-      w: this.marquee.w / factor,
-      h: this.marquee.h / factor
+      x: (marquee.x - dimensions.x) / factor,
+      y: (marquee.y - dimensions.y) / factor,
+      w: marquee.w / factor,
+      h: marquee.h / factor
     };
 
     // Normalize the values.
@@ -284,29 +317,28 @@ if (typeof Object.create !== 'function') {
    * Loads the image and draws it.
    */
   CanvasCrop.prototype.drawBackground = function() {
+    var self = this,
+        drawImage;
+
+    drawImage = function () {
+      var dimensions = self.getScaledDimensions();
+      self.context.drawImage(self.image, dimensions.x, dimensions.y, dimensions.w, dimensions.h);
+    };
+
     if (this.options.src && !this.image) {
       this.image = document.createElement('img');
       this.image.src = this.options.src;
-      $(this.image).on('load', this.drawImage.bind(this));
+      $(this.image).on('load', drawImage);
     } else {
-      this.drawImage();
+      drawImage();
     }
   };
 
   /**
-   * Draws the image onto the canvas.
+   * Clears the entire canvas.
    */
-  CanvasCrop.prototype.drawImage = function() {
-    var dimensions = this.getScaledDimensions();
-    this.context.drawImage(this.image, dimensions.x, dimensions.y, dimensions.w, dimensions.h);
-  };
-
-  /**
-   * Clears and redraws the base background.
-   */
-  CanvasCrop.prototype.clearCanvas = function() {
+  CanvasCrop.prototype.clearCanvas = function () {
     this.context.clearRect(0, 0, this.getCanvasWidth(), this.getCanvasHeight());
-    this.drawBackground();
   };
 
   /**
@@ -333,6 +365,7 @@ if (typeof Object.create !== 'function') {
 
   /**
    * Returns the image scaling factor that is not greater than 1x.
+   *
    * @returns {number}
    */
   CanvasCrop.prototype.getScalingFactor = function() {
@@ -343,11 +376,11 @@ if (typeof Object.create !== 'function') {
   };
 
   CanvasCrop.prototype.getCanvasWidth = function() {
-    return this.canvas.width;
+    return this.$canvas[0].width;
   };
 
   CanvasCrop.prototype.getCanvasHeight = function() {
-    return this.canvas.height;
+    return this.$canvas[0].height;
   };
 
   /**
@@ -407,21 +440,9 @@ if (typeof Object.create !== 'function') {
   };
 
   /**
-   * @param {number} x
-   * @param {number} y
-   * @param {number} w
-   * @param {number} h
-   * @param {string} fill
    * @constructor
    */
-  Shape = function(x, y, w, h, fill) {
-    this.x = x;
-    this.y = y;
-    this.w = w;
-    this.h = h;
-    this.fill = fill || 'rgba(0, 255, 255, .3)';
-    this.normalize();
-  };
+  Shape = function() {};
 
   /**
    * If the shape is drawn from a lower to upper quadrant, width and/or height will be negative.
@@ -443,22 +464,36 @@ if (typeof Object.create !== 'function') {
   };
 
   /**
-   * @param {number} x
-   * @param {number} y
-   * @param {number} w
-   * @param {number} h
-   * @param {string} fill
    * @constructor
    */
-  Rectangle = function(x, y, w, h, fill) {
-    Shape.call(this, x, y, w, h, fill);
+  Rectangle = function() {
+    this.update.apply(this, arguments);
   };
 
   Rectangle.prototype = Object.create(Shape.prototype);
 
-  Rectangle.prototype.draw = function(context) {
-    context.fillStyle = this.fill;
-    context.fillRect(this.x, this.y, this.w, this.h);
+  /**
+   * @param {number} x
+   * @param {number} y
+   * @param {number} w
+   * @param {number} h
+   */
+  Rectangle.prototype.update = function(x, y, w, h) {
+    this.x = x;
+    this.y = y;
+    this.w = w;
+    this.h = h;
+    this.normalize();
+  };
+
+  /**
+   * @param {CanvasRenderingContext2D} context
+   */
+  Rectangle.prototype.draw = function (context) {
+    context.beginPath();
+    context.rect(this.x, this.y, this.w, this.h);
+    context.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+    context.strokeRect(this.x, this.y, this.w, this.h);
   };
 
   /**
@@ -468,32 +503,40 @@ if (typeof Object.create !== 'function') {
    * @param my
    * @returns {boolean}
    */
-  Rectangle.prototype.contains = function(mx, my) {
+  Rectangle.prototype.contains = function (mx, my) {
     return (this.x <= mx) && (this.x + this.w >= mx) && (this.y <= my) && (this.y + this.h >= my);
   };
+
+  /**
+   * @constructor
+   */
+  Ellipse = function() {
+    this.update.apply(this, arguments);
+  };
+
+  Ellipse.prototype = Object.create(Shape.prototype);
 
   /**
    * @param {number} x
    * @param {number} y
    * @param {number} w
    * @param {number} h
-   * @param {string} fill
-   * @constructor
    */
-  Ellipse = function(x, y, w, h, fill) {
-    Shape.call(this, x, y, w, h, fill);
+  Ellipse.prototype.update = function (x, y, w, h) {
     this.kappa = 0.5522848;
-    this.ox = (this.w / 2) * this.kappa; // control point offset horizontal
-    this.oy = (this.h / 2) * this.kappa; // control point offset vertical
-    this.xe = this.x + this.w; // x-end
-    this.ye = this.y + this.h; // y-end
-    this.xm = this.x + this.w / 2; // x-middle
-    this.ym = this.y + this.h / 2; // y-middle
-    this.xr = this.w / 2; // x-radius
-    this.yr = this.h / 2; // y-radius
+    this.x = x;
+    this.y = y;
+    this.w = w;
+    this.h = h;
+    this.ox = (w / 2) * this.kappa; // control point offset horizontal
+    this.oy = (h / 2) * this.kappa; // control point offset vertical
+    this.xe = x + w; // x-end
+    this.ye = y + h; // y-end
+    this.xm = x + w / 2; // x-middle
+    this.ym = y + h / 2; // y-middle
+    this.xr = w / 2; // x-radius
+    this.yr = h / 2; // y-radius
   };
-
-  Ellipse.prototype = Object.create(Shape.prototype);
 
   /**
    * http://math.stackexchange.com/a/76463
@@ -502,7 +545,7 @@ if (typeof Object.create !== 'function') {
    * @param {number} my
    * @returns {boolean}
    */
-  Ellipse.prototype.contains = function(mx, my) {
+  Ellipse.prototype.contains = function (mx, my) {
     return (Math.pow(mx - this.xm, 2) / Math.pow(this.xr, 2)) +
         (Math.pow(my - this.ym, 2) / Math.pow(this.yr, 2)) <= 1;
   };
@@ -510,9 +553,9 @@ if (typeof Object.create !== 'function') {
   /**
    * Draws an ellipse using Bezier curves. See http://stackoverflow.com/a/2173084/2651279
    *
-   * @param {CanvasRenderingContext2D} ctx
+   * @param {CanvasRenderingContext2D} context
    */
-  Ellipse.prototype.draw = function(ctx) {
+  Ellipse.prototype.draw = function (context) {
     var x = this.x,
         y = this.y,
         ox = this.ox,
@@ -522,15 +565,13 @@ if (typeof Object.create !== 'function') {
         xm = this.xm,
         ym = this.ym;
 
-    ctx.beginPath();
-    ctx.moveTo(x, ym);
-    ctx.bezierCurveTo(x, ym - oy, xm - ox, y, xm, y);
-    ctx.bezierCurveTo(xm + ox, y, xe, ym - oy, xe, ym);
-    ctx.bezierCurveTo(xe, ym + oy, xm + ox, ye, xm, ye);
-    ctx.bezierCurveTo(xm - ox, ye, x, ym + oy, x, ym);
-    ctx.closePath();
-    ctx.fillStyle = this.fill;
-    ctx.fill();
+    context.beginPath();
+    context.moveTo(x, ym);
+    context.bezierCurveTo(x, ym - oy, xm - ox, y, xm, y);
+    context.bezierCurveTo(xm + ox, y, xe, ym - oy, xe, ym);
+    context.bezierCurveTo(xe, ym + oy, xm + ox, ye, xm, ye);
+    context.bezierCurveTo(xm - ox, ye, x, ym + oy, x, ym);
+    context.closePath();
   };
 
   /**
@@ -539,7 +580,7 @@ if (typeof Object.create !== 'function') {
    * @param {object} option
    * @returns {*}
    */
-  $.fn.canvasCrop = function(option) {
+  $.fn.canvasCrop = function (option) {
     return this.each(function() {
       var $this   = $(this),
           data    = $this.data('canvas-crop'),
