@@ -22,6 +22,8 @@ if (typeof Object.create !== 'function') {
     factory(jQuery);
   }
 }(function($) {
+  'use strict';
+
   var CanvasCrop,
       Shape,
       Rectangle,
@@ -424,12 +426,11 @@ if (typeof Object.create !== 'function') {
     workCanvas.width = coords.w;
     workCanvas.height = coords.h;
 
-    // Draw the selected image into the canvas.
-    workContext.drawImage(this.image, coords.x, coords.y, coords.w, coords.h, 0, 0, coords.w, coords.h);
-
-    // If the image isn't being served off of the same domain, this will throw a security exception.
-    // Let's catch that exception and instead just set data to null.
     try {
+      // Draw the selected image into the canvas.
+      workContext.drawImage(this.image, coords.x, coords.y, coords.w, coords.h, 0, 0, coords.w, coords.h);
+
+      // This may throw a security exception.
       packed.data = workCanvas.toDataURL('image/png');
     } catch(e) {
       packed.data = null;
@@ -443,6 +444,13 @@ if (typeof Object.create !== 'function') {
    * @constructor
    */
   Shape = function() {};
+
+  Shape.prototype.constructor = Shape;
+
+  // Define a static property.
+  Object.defineProperty(Shape, 'strokeStyle', {
+    value: 'rgba(255, 255, 255, 0.5)'
+  });
 
   /**
    * If the shape is drawn from a lower to upper quadrant, width and/or height will be negative.
@@ -492,7 +500,7 @@ if (typeof Object.create !== 'function') {
   Rectangle.prototype.draw = function (context) {
     context.beginPath();
     context.rect(this.x, this.y, this.w, this.h);
-    context.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+    context.strokeStyle = Shape.strokeStyle;
     context.strokeRect(this.x, this.y, this.w, this.h);
   };
 
@@ -571,7 +579,8 @@ if (typeof Object.create !== 'function') {
     context.bezierCurveTo(xm + ox, y, xe, ym - oy, xe, ym);
     context.bezierCurveTo(xe, ym + oy, xm + ox, ye, xm, ye);
     context.bezierCurveTo(xm - ox, ye, x, ym + oy, x, ym);
-    context.closePath();
+    context.strokeStyle = Shape.strokeStyle;
+    context.stroke();
   };
 
   /**
