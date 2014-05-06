@@ -5,6 +5,16 @@
  * @author Greg Kuwaye
  * @license MIT License - http://www.opensource.org/licenses/mit-license.php
  */
+
+// Object.create polyfill
+if (typeof Object.create !== 'function') {
+  Object.create = function (o) {
+    function F() {}
+    F.prototype = o;
+    return new F();
+  };
+}
+
 (function(factory) {
   if (typeof define === 'function' && define.amd) {
     define(['jquery'], factory);
@@ -112,8 +122,6 @@
   };
 
   CanvasCrop.prototype.handleMouseup = function(e) {
-    var cropCoords;
-
     // If we were just repositioning or resizing a box, report the final crop size.
     if (this.state.repositioning || this.state.resizing) {
       this.$canvas.trigger($.Event('crop.finish', {coordinates: this.getCropCoordinates(true)}));
@@ -446,7 +454,7 @@
     Shape.call(this, x, y, w, h, fill);
   };
 
-  $.extend(Rectangle.prototype, Shape.prototype);
+  Rectangle.prototype = Object.create(Shape.prototype);
 
   Rectangle.prototype.draw = function(context) {
     context.fillStyle = this.fill;
@@ -485,7 +493,7 @@
     this.yr = this.h / 2; // y-radius
   };
 
-  $.extend(Ellipse.prototype, Shape.prototype);
+  Ellipse.prototype = Object.create(Shape.prototype);
 
   /**
    * http://math.stackexchange.com/a/76463
