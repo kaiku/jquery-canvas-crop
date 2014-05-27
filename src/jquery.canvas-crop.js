@@ -92,16 +92,17 @@ if (typeof Object.create !== 'function') {
     var self = this;
 
     this.$canvas
-        .on('mousedown', $.proxy(this.handleMousedown, this))
-        .on('mousemove', $.proxy(this.handleMousemove, this))
-        .css('cursor', 'crosshair');
+      .on('mousedown', $.proxy(this.handleMousedown, this))
+      .on('mousemove', $.proxy(this.handleMousemove, this))
+      .on('crop.api.selectall', $.proxy(this.selectAll, this))
+      .css('cursor', 'crosshair');
 
     this.$window
-        .on('mouseup', $.proxy(this.handleMouseup, this))
-        .on('keyup keydown', function(e) {
-          self.state.shiftKey = e.shiftKey;
-          return true;
-        });
+      .on('mouseup', $.proxy(this.handleMouseup, this))
+      .on('keyup keydown', function(e) {
+        self.state.shiftKey = e.shiftKey;
+        return true;
+      });
 
     this.drawBackground();
   };
@@ -254,7 +255,7 @@ if (typeof Object.create !== 'function') {
 
   /**
    * Draws the canvas from the bottom up, starting with the base background image; next, the semi-transparent overlay;
-   * and finally, the clipping mask image representing the selceted area.
+   * and finally, the clipping mask image representing the selected area.
    *
    * @param {number} x
    * @param {number} y
@@ -286,11 +287,34 @@ if (typeof Object.create !== 'function') {
   };
 
   /**
+   * Select the entire canvas, or a centered portion of it if the marquee is constrained.
+   */
+  CanvasCrop.prototype.selectAll = function () {
+    var dimensions = this.getScaledDimensions(),
+        coords = [],
+        minEdge,
+        xOffset,
+        yOffset;
+
+    if (this.options.constrain) {
+      minEdge = Math.min(dimensions.w, dimensions.h);
+      xOffset = (dimensions.w - minEdge) / 2;
+      yOffset = (dimensions.h - minEdge) / 2;
+      coords = [xOffset + dimensions.x, yOffset + dimensions.y, minEdge, minEdge];
+    } else {
+      coords = [dimensions.x, dimensions.y, dimensions.w, dimensions.h];
+    }
+
+    this.draw.apply(this, coords);
+    this.$canvas.trigger($.Event('crop.finish', {coordinates: this.getCropCoordinates(true)}));
+  };
+
+  /**
    * Gets the scaled cropped coordinates of the image from the marquee. Optionally return Math.floor'ed values.
    *
    * @returns {{x: number, y: number, w: number, h: number}}
    */
-  CanvasCrop.prototype.getCropCoordinates = function(floor) {
+  CanvasCrop.prototype.getCropCoordinates = function (floor) {
     var factor = this.getScalingFactor(),
         marquee = this.marquee,
         dimensions,
@@ -324,7 +348,7 @@ if (typeof Object.create !== 'function') {
   /**
    * Loads the image and draws it.
    */
-  CanvasCrop.prototype.drawBackground = function() {
+  CanvasCrop.prototype.drawBackground = function () {
     var self = this,
         drawImage;
 
@@ -354,7 +378,7 @@ if (typeof Object.create !== 'function') {
    *
    * @returns {{x: number, y: number, x2: number, y2: number, w: number, h: number}}
    */
-  CanvasCrop.prototype.getScaledDimensions = function() {
+  CanvasCrop.prototype.getScaledDimensions = function () {
     var factor = this.getScalingFactor(),
         w = this.image.width * factor,
         h = this.image.height * factor,
@@ -376,18 +400,18 @@ if (typeof Object.create !== 'function') {
    *
    * @returns {number}
    */
-  CanvasCrop.prototype.getScalingFactor = function() {
+  CanvasCrop.prototype.getScalingFactor = function () {
     var xScale = this.getCanvasWidth() / this.image.width,
         yScale = this.getCanvasHeight() / this.image.height;
 
     return Math.min(Math.min(xScale, yScale), 1);
   };
 
-  CanvasCrop.prototype.getCanvasWidth = function() {
+  CanvasCrop.prototype.getCanvasWidth = function () {
     return this.$canvas[0].width;
   };
 
-  CanvasCrop.prototype.getCanvasHeight = function() {
+  CanvasCrop.prototype.getCanvasHeight = function () {
     return this.$canvas[0].height;
   };
 
@@ -396,7 +420,7 @@ if (typeof Object.create !== 'function') {
    * of the mouse relative to the left and top edge of the document. We then subtract the canvas offset relative
    * to the same corner as well as padding and border to get the "true" coordinates relative to the canvas.
    */
-  CanvasCrop.prototype.getMouse = function(e) {
+  CanvasCrop.prototype.getMouse = function (e) {
     var tgt = e.target,
         offset = $(tgt).offset();
 
@@ -410,7 +434,7 @@ if (typeof Object.create !== 'function') {
    * When called, writes the selected portion of the image to a hidden canvas and exports its data.
    * This is a very slow function and should only be called on mouseup, and only if the user enabled the feature.
    */
-  CanvasCrop.prototype.getRawCroppedImageData = function() {
+  CanvasCrop.prototype.getRawCroppedImageData = function () {
     var workCanvas = document.createElement('canvas'),
         workContext = workCanvas.getContext('2d'),
         coords = this.getCropCoordinates(true),
@@ -449,7 +473,7 @@ if (typeof Object.create !== 'function') {
   /**
    * @constructor
    */
-  Shape = function() {};
+  Shape = function () {};
 
   Shape.prototype.constructor = Shape;
 
@@ -462,25 +486,25 @@ if (typeof Object.create !== 'function') {
    * If the shape is drawn from a lower to upper quadrant, width and/or height will be negative.
    * Normalizing to positive numbers makes working with coordinates easier.
    */
-  Shape.prototype.normalize = function() {
+  Shape.prototype.normalize = function () {
     this.x = this.w < 0 ? this.x + this.w : this.x;
     this.y = this.h < 0 ? this.y + this.h : this.y;
     this.w = Math.abs(this.w);
     this.h = Math.abs(this.h);
   };
 
-  Shape.prototype.draw = function() {
+  Shape.prototype.draw = function () {
     throw 'Method "draw" must be implemented on objects inheriting from Shape.';
   };
 
-  Shape.prototype.contains = function() {
+  Shape.prototype.contains = function () {
     throw 'Method "contains" must be implemented on objects inheriting from Shape.';
   };
 
   /**
    * @constructor
    */
-  Rectangle = function() {
+  Rectangle = function () {
     this.update.apply(this, arguments);
   };
 
@@ -524,7 +548,7 @@ if (typeof Object.create !== 'function') {
   /**
    * @constructor
    */
-  Ellipse = function() {
+  Ellipse = function () {
     this.update.apply(this, arguments);
   };
 
@@ -596,7 +620,7 @@ if (typeof Object.create !== 'function') {
    * @returns {*}
    */
   $.fn.canvasCrop = function (option) {
-    return this.each(function() {
+    return this.each(function () {
       var $this   = $(this),
           data    = $this.data('canvas-crop'),
           options = $.extend({}, CanvasCrop.DEFAULTS, $this.data(), typeof option == 'object' && option);

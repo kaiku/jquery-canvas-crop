@@ -40,3 +40,9 @@ $(function() {
   });
 });
 ```
+
+You can also select the entire canvas – or a centered portion of it, if the marquee is constrained – using the API:
+
+```javascript
+canvas.trigger('crop.api.selectall');
+```
