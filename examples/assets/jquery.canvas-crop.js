@@ -130,13 +130,19 @@ if (typeof Object.create !== 'function') {
    * @param {object} e
    */
   CanvasCrop.prototype.handleMouseup = function (e) {
+    var coords;
+
     // If we were just repositioning or resizing a box, report the final crop size.
     if (this.state.repositioning || this.state.resizing) {
-      this.$canvas.trigger($.Event('crop.finish', {coordinates: this.getCropCoordinates(true)}));
+      coords = this.getCropCoordinates(true);
 
-      // Have we enabled raw data output?
-      if (this.options.enableRawDataOutput) {
-        this.$canvas.trigger($.Event('crop.data', {rawData: this.getRawCroppedImageData()}));
+      if (coords.x && coords.y && coords.w && coords.h) {
+        this.$canvas.trigger($.Event('crop.finish', {coordinates: coords}));
+
+        // Have we enabled raw data output?
+        if (this.options.enableRawDataOutput) {
+          this.$canvas.trigger($.Event('crop.data', {rawData: this.getRawCroppedImageData()}));
+        }
       }
     }
 
