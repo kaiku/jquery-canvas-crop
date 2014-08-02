@@ -35,7 +35,10 @@ if (typeof Object.create !== 'function') {
    * @constructor
    */
   CanvasCrop = function (canvas, options) {
-    var computedStyle = window.getComputedStyle(canvas, null);
+    var computedStyle = window.getComputedStyle(canvas, null),
+        getComputedStyleIntVal = function (propName) {
+          return parseInt(computedStyle.getPropertyValue(propName), 10);
+        };
 
     this.$canvas = $(canvas);
     this.$window = $(window);
@@ -46,10 +49,10 @@ if (typeof Object.create !== 'function') {
 
     this.state = {
       canvas: {
-        paddingLeft: parseInt(computedStyle.getPropertyValue('padding-left')),
-        paddingTop: parseInt(computedStyle.getPropertyValue('padding-top')),
-        borderTop: parseInt(computedStyle.getPropertyValue('border-top-width')),
-        borderLeft: parseInt(computedStyle.getPropertyValue('border-left-width'))
+        paddingLeft: getComputedStyleIntVal('padding-left'),
+        paddingTop: getComputedStyleIntVal('padding-top'),
+        borderTop: getComputedStyleIntVal('border-top-width'),
+        borderLeft: getComputedStyleIntVal('border-left-width')
       },
       repositioning: false,
       repositioningCoords: {
