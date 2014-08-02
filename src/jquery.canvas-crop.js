@@ -359,6 +359,10 @@ if (typeof Object.create !== 'function') {
 
     if (this.options.src && !this.image) {
       this.image = document.createElement('img');
+      // For CORS support. See https://developer.mozilla.org/en-US/docs/Web/HTML/CORS_enabled_image for more info
+      if (this.options.crossOrigin !== undefined) {
+        this.image.crossOrigin = this.options.crossOrigin;
+      }
       this.image.src = this.options.src;
       $(this.image).on('load', drawImage);
     } else {
